@@ -1,7 +1,7 @@
 import nibabel as nib
 import numpy as np
-import vtk
-from vtk.util.numpy_support import numpy_to_vtk
+import my_vtk_script
+from my_vtk_script.util.numpy_support import numpy_to_vtk
 
 
 def load_nifti_image(file_path):
