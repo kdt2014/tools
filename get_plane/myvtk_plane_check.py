@@ -92,14 +92,18 @@ cut_reslice_array = numpy_support.vtk_to_numpy(cut_reslice_output.GetPointData()
 cut_reslice_array = cut_reslice_array.reshape((cut_reslice_extent[3] - cut_reslice_extent[2] + 1,
                                                cut_reslice_extent[1] - cut_reslice_extent[0] + 1))
 
+# Rotate the image by 90 degrees clockwise
+rotated_image_array = np.rot90(cut_reslice_array, k=-1)
+
 # Map the CT values to the 0-255 range
-min_value = np.min(cut_reslice_array)
-max_value = np.max(cut_reslice_array)
-scaled_array = np.uint8(255 * (cut_reslice_array - min_value) / (max_value - min_value))
+min_value = np.min(rotated_image_array)
+max_value = np.max(rotated_image_array)
+scaled_array = np.uint8(255 * (rotated_image_array - min_value) / (max_value - min_value))
 
 # Save the grayscale image using PIL
 image = Image.fromarray(scaled_array)
 image.save("cut_section.png")
 
 print("Image saved as 'cut_section.png'")
+
 
