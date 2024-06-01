@@ -30,6 +30,11 @@ point_data = image_data.GetPointData().GetScalars()
 array = numpy_support.vtk_to_numpy(point_data)
 array = array.reshape(image_data.GetDimensions(), order='F')
 
+# Check the original data range
+min_value_original = np.min(array)
+max_value_original = np.max(array)
+print("Original Data Range: ", min_value_original, " to ", max_value_original)
+
 # Define the reorientation affine transformation matrix
 reorient_affine = np.array([
     [0, 0, 1, 0],  # transpose (2, 1, 0)
@@ -45,7 +50,7 @@ transform.SetMatrix(reorient_affine.flatten())
 reslice = vtk.vtkImageReslice()
 reslice.SetInputData(image_data)
 reslice.SetResliceTransform(transform)
-reslice.SetInterpolationModeToLinear()
+reslice.SetInterpolationModeToCubic()  # Use cubic interpolation
 reslice.SetOutputExtent(image_data.GetExtent())
 reslice.Update()
 
@@ -80,7 +85,7 @@ cut_reslice.SetResliceAxesDirectionCosines(
     normal[0], normal[1], normal[2],
     -normal[1], normal[0], 0,
     0, 0, 1)
-cut_reslice.SetInterpolationModeToLinear()
+cut_reslice.SetInterpolationModeToCubic()  # Use cubic interpolation
 cut_reslice.Update()
 
 # Get the output from reslice
@@ -91,6 +96,11 @@ cut_reslice_extent = cut_reslice_output.GetExtent()
 cut_reslice_array = numpy_support.vtk_to_numpy(cut_reslice_output.GetPointData().GetScalars())
 cut_reslice_array = cut_reslice_array.reshape((cut_reslice_extent[3] - cut_reslice_extent[2] + 1,
                                                cut_reslice_extent[1] - cut_reslice_extent[0] + 1))
+
+# Identify and set regions with no CT values to 0
+# Assuming no CT values are represented by a specific fill value
+fill_value = -3024  # Example fill value, change as necessary
+cut_reslice_array[cut_reslice_array == fill_value] = 0
 
 # Rotate the image by 90 degrees clockwise
 rotated_image_array = np.rot90(cut_reslice_array, k=-1)
@@ -105,5 +115,4 @@ image = Image.fromarray(scaled_array)
 image.save("cut_section.png")
 
 print("Image saved as 'cut_section.png'")
-
 
