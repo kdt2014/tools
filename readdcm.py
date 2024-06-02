@@ -1,7 +1,7 @@
 import pydicom
 
 # 读取DICOM文件
-dicom_file_path = 'E:\dataset\CBCT\post-FA1714_20210303_110310_anonz/3DSlice1.dcm'
+dicom_file_path = 'E:\dataset\CBCT\p1/3DSlice1.dcm'
 dataset = pydicom.dcmread(dicom_file_path)
 
 # 打印DICOM文件的基本信息

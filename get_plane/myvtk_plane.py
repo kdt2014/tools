@@ -4,9 +4,9 @@ from PIL import Image
 from vtkmodules.util import numpy_support
 
 # Define the coordinates of three points
-p1 = [-15.034228302882678, -30.2137484248086, -22.84246285093691]
-p2 = [-14.089678248570625, -28.263273122123387, -14.914172739473898]
-p3 = [-16.688125349924306, -25.396670932765616, -36.30480886717598]
+p1 = [-9.69734348599805, -33.08485126446559, -22.749778244595152]
+p2 = [-8.751273757037172, -31.376424855451674, -14.821241587740474]
+p3 = [-11.288699239305164, -28.993066868387096, -35.73076265650188]
 
 # Compute the normal vector of the plane
 v1 = np.array(p2) - np.array(p1)
@@ -24,11 +24,49 @@ reader.Update()
 
 # Get image data
 image_data = reader.GetOutput()
+# origin1 = image_data.GetOrigin()
+# print("origin1:", origin1)
 
 # Get the numpy array from vtkImageData
 point_data = image_data.GetPointData().GetScalars()
+# 打印点数据
+# print(point_data)
 array = numpy_support.vtk_to_numpy(point_data)
+dimensions = image_data.GetDimensions()
+print("vtkImg shape:", dimensions)
 array = array.reshape(image_data.GetDimensions(), order='F')
+print("Array shape:", array.shape)
+
+# ###########################################################################
+# 存储风格不影响空间中点的位置
+#这部分是测试验证这个结论的代码
+# 重塑为不同排序方式的数组并打印部分内容
+# array_f = array.reshape(dimensions, order='F')
+# array_c = array.reshape(dimensions, order='C')
+#
+# print("Array shape (F-order):", array_f.shape)
+# print("Array shape (C-order):", array_c.shape)
+#
+# # 打印一些不同位置的元素以比较不同排序方式的结果
+# print("\nSample elements (F-order):")
+# print("array_f[0, 0, 0]:", array_f[0, 0, 0])
+# print("array_f[0, 0, 1]:", array_f[0, 0, 1])
+# print("array_f[0, 1, 0]:", array_f[0, 1, 0])
+# print("array_f[1, 0, 0]:", array_f[1, 0, 0])
+# print("array_f[550, 550, 549]:", array_f[550, 550, 549])
+#
+# print("\nSample elements (C-order):")
+# print("array_c[0, 0, 0]:", array_c[0, 0, 0])
+# print("array_c[0, 0, 1]:", array_c[0, 0, 1])
+# print("array_c[0, 1, 0]:", array_c[0, 1, 0])
+# print("array_c[1, 0, 0]:", array_c[1, 0, 0])
+# print("array_c[550, 550, 549]:", array_c[550, 550, 549])
+#
+# # 验证不同排序方式的内容是否相同
+# print("\nF-order == C-order:", np.array_equal(array_f, array_c))
+#
+# #######################################################################
+
 
 # Define the reorientation affine transformation matrix
 reorient_affine = np.array([
@@ -37,6 +75,13 @@ reorient_affine = np.array([
     [1, 0, 0, 0],  # swap X and Z axes
     [0, 0, 0, 1]   # Homogeneous coordinate remains unchanged
 ])
+
+# reorient_affine = np.array([
+#     [1, 0, 0, 0],  # transpose (2, 1, 0)
+#     [0, 1, 0, 0],  # keep Y axis unchanged
+#     [0, 0, 1, 0],  # swap X and Z axes
+#     [0, 0, 0, 1]   # Homogeneous coordinate remains unchanged
+# ])
 
 # Apply affine transformation
 transform = vtk.vtkTransform()
@@ -93,18 +138,22 @@ cut_reslice_array = cut_reslice_array.reshape((cut_reslice_extent[3] - cut_resli
                                                cut_reslice_extent[1] - cut_reslice_extent[0] + 1))
 
 # Rotate the image by 90 degrees clockwise
-rotated_image_array = np.rot90(cut_reslice_array, k=-1)
+# rotated_image_array = np.rot90(cut_reslice_array, k=-1)
 
 # Map the CT values to the 0-255 range
-min_value = np.min(rotated_image_array)
-max_value = np.max(rotated_image_array)
-scaled_array = np.uint8(255 * (rotated_image_array - min_value) / (max_value - min_value))
+# min_value = np.min(rotated_image_array)
+# max_value = np.max(rotated_image_array)
+# scaled_array = np.uint8(255 * (rotated_image_array - min_value) / (max_value - min_value))
+
+min_value = np.min(cut_reslice_array)
+max_value = np.max(cut_reslice_array)
+scaled_array = np.uint8(255 * (cut_reslice_array - min_value) / (max_value - min_value))
 
 # Save the grayscale image using PIL
 image = Image.fromarray(scaled_array)
-image.save("cut_section.png")
+image.save("cut_section1.png")
 
-print("Image saved as 'cut_section.png'")
+print("Image saved as 'cut_section1.png'")
 
 
 
