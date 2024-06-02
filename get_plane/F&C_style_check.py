@@ -1,7 +1,8 @@
 ###########################################################################################
 #               这个实验结果表明：
-#               相同的物理坐标转换成像素坐标后，如果数据存储风格不同（F和C风格）
-#               那么对应的像素值也不同
+#               1.相同的物理坐标转换成像素坐标后，如果数据存储风格不同（F和C风格）,那么对应的像素值也不同
+#               2.读取nii之后需要根据头文件设置origin，否者会造成数据读取误差
+#
 ###########################################################################################
 
 import numpy as np
@@ -38,6 +39,12 @@ array_c = array.reshape(dimensions, order='C')
 # 假设 p1 是物理坐标
 p1 = np.array([-9.69734348599805, -33.08485126446559, -22.749778244595152])
 
+
+# Set the correct origin based on the NIfTI header
+image_data.SetOrigin(49.5, 49.5, -49.41)
+
+
+
 # 函数：将物理坐标转换为像素坐标
 def physical_to_pixel(image_data, physical_point):
     # 获取图像的方向矩阵和原点
@@ -54,7 +61,7 @@ def physical_to_pixel(image_data, physical_point):
     # 将物理坐标转换为像素坐标
     pixel_point = np.linalg.inv(direction_matrix).dot(relative_point / spacing)
     return np.round(pixel_point).astype(int)
-
+#
 # 获取像素坐标
 pixel_coords = physical_to_pixel(image_data, p1)
 
@@ -65,7 +72,9 @@ value_f = array_f[tuple(pixel_coords)]
 value_c = array_c[tuple(pixel_coords)]
 
 print("Value at pixel coordinates (F-order):", value_f)
+print("array_f[-54, -184, -126]:", array_f[-54, -184, -126])
 print("Value at pixel coordinates (C-order):", value_c)
+print("array_c[-54, -184, -126]:", array_c[-54, -184, -126])
 
 # 验证不同存储顺序下的值是否相同
 print("Values match:", value_f == value_c)
